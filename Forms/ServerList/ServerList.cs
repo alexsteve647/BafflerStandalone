@@ -113,6 +113,12 @@ namespace BafflerStandalone.Forms.ServerList
         {
 			if (MessageBox.Show(this, "Are you sure you want to delete all connections?", "Baffler's Standalone", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
 			{
+				if(DbServers.Instance.List.Count == 0)
+				{
+					MessageBox.Show(this, "There are no servers to delete.", "Baffler's Standalone", MessageBoxButtons.OK, MessageBoxIcon.Information);
+					return;
+				}
+				DbServers.Instance.RemoveAllServers();
 				DbServers.Instance.List.Clear();
 				this.LoadList();
 			}
@@ -161,29 +167,32 @@ namespace BafflerStandalone.Forms.ServerList
 
 		private bool CheckURL(string url, bool showBoxes)
 		{
-			if(url.Length < 1)
-			{
-				if(showBoxes) MessageBox.Show(this, "The url must be a valid.", "Baffler's Standalone", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				return false;
-			}
-			HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-			request.Timeout = 10000; // 10 seconds
-			request.Method = "HEAD";
 			try
-			{
-				using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            {
+				HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+				request.Timeout = 10000; // 10 seconds
+				request.Method = "HEAD";
+				try
 				{
-					if (response.StatusCode == HttpStatusCode.OK)
+					using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
 					{
-						if (showBoxes) MessageBox.Show(this, "The Website is working.", "Baffler's Standalone", MessageBoxButtons.OK, MessageBoxIcon.Information);
-						return true;
+						if (response.StatusCode == HttpStatusCode.OK)
+						{
+							if (showBoxes) MessageBox.Show(this, "The Website is working.", "Baffler's Standalone", MessageBoxButtons.OK, MessageBoxIcon.Information);
+							return true;
+						}
 					}
+					return false;
 				}
-				return false;
+				catch (WebException ex)
+				{
+					if (showBoxes) MessageBox.Show(this, ex.Message, "Baffler's Standalone", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					return false;
+				}
 			}
-			catch (WebException ex)
+			catch (System.UriFormatException)
 			{
-				if (showBoxes) MessageBox.Show(this, ex.Message, "Baffler's Standalone", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				if (showBoxes) MessageBox.Show(this, "The url is invalid.", "Baffler's Standalone", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return false;
 			}
 		}

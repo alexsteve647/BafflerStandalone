@@ -61,5 +61,10 @@ namespace BafflerStandalone.Database
 				this.m_serverlist[server] = url;
 			}
 		}
+		
+		public void RemoveAllServers()
+		{
+			Database.Instance.ExecuteNonQuery("DELETE FROM serverlist");
+		}
 	}
 }
